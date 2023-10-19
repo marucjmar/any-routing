@@ -1,0 +1,45 @@
+{
+  "name": "maplibre-engine",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/maplibre-engine/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/maplibre-engine/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/packages/maplibre-engine"
+      ],
+      "options": {
+        "jestConfig": "packages/maplibre-engine/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/packages/maplibre-engine",
+        "tsConfig": "packages/maplibre-engine/tsconfig.lib.json",
+        "packageJson": "packages/maplibre-engine/package.json",
+        "main": "packages/maplibre-engine/src/index.ts",
+        "assets": [
+          "packages/maplibre-engine/*.md"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

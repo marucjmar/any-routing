@@ -1,0 +1,45 @@
+{
+  "name": "annotation-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/annotation-plugin/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/annotation-plugin/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/packages/annotation-plugin"
+      ],
+      "options": {
+        "jestConfig": "packages/annotation-plugin/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/packages/annotation-plugin",
+        "tsConfig": "packages/annotation-plugin/tsconfig.lib.json",
+        "packageJson": "packages/annotation-plugin/package.json",
+        "main": "packages/annotation-plugin/src/index.ts",
+        "assets": [
+          "packages/annotation-plugin/*.md"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

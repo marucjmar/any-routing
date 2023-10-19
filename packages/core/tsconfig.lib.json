@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ES2020",
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"],
+    "target": "ES6"
+  },
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+  "include": ["**/*.ts"]
+}

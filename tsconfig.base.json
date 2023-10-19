@@ -1,0 +1,26 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2017", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@any-routing/annotation-plugin": ["packages/annotation-plugin/src/index.ts"],
+      "@any-routing/core": ["packages/core/src/index.ts"],
+      "@any-routing/here-data-provider": ["packages/here-data-provider/src/index.ts"],
+      "@any-routing/maplibre-engine": ["packages/maplibre-engine/src/index.ts"],
+      "@any-routing/maplibre-layers-event-propagator": ["packages/maplibre-layers-event-propagator/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

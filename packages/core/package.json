@@ -1,0 +1,26 @@
+{
+  "name": "@any-routing/core",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "author": "Marcin Lazar",
+  "keywords": [
+    "MapLibre GL",
+    "Routing",
+    "Directions",
+    "Route",
+    "OSMR",
+    "Here",
+    "Plugin",
+    "Map",
+    "js",
+    "leaflet"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marucjmar/any-routing"
+  },
+  "dependencies": {
+    "@turf/helpers": "^6.5.0"
+  }
+}

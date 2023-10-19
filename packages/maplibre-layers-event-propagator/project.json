@@ -1,0 +1,41 @@
+{
+  "name": "maplibre-layers-event-propagator",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/maplibre-layers-event-propagator/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/maplibre-layers-event-propagator/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/maplibre-layers-event-propagator/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/maplibre-layers-event-propagator",
+        "tsConfig": "packages/maplibre-layers-event-propagator/tsconfig.lib.json",
+        "packageJson": "packages/maplibre-layers-event-propagator/package.json",
+        "main": "packages/maplibre-layers-event-propagator/src/index.ts",
+        "assets": ["packages/maplibre-layers-event-propagator/*.md"]
+      }
+    }
+  },
+  "tags": []
+}

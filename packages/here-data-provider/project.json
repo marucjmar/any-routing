@@ -1,0 +1,45 @@
+{
+  "name": "here-data-provider",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/here-data-provider/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/here-data-provider/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/packages/here-data-provider"
+      ],
+      "options": {
+        "jestConfig": "packages/here-data-provider/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/packages/here-data-provider",
+        "tsConfig": "packages/here-data-provider/tsconfig.lib.json",
+        "packageJson": "packages/here-data-provider/package.json",
+        "main": "packages/here-data-provider/src/index.ts",
+        "assets": [
+          "packages/here-data-provider/*.md"
+        ]
+      }
+    }
+  },
+  "tags": []
+}
