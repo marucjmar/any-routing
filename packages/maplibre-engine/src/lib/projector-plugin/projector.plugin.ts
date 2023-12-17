@@ -62,6 +62,7 @@ export class MapLibreProjector implements AnyRoutingPlugin {
       canSelectRoute: true,
       routesWhileDragging: true,
       waypointDragCommitDebounceTime: 150,
+      sourceTolerance: 0.01,
       ...options,
     };
 
@@ -100,6 +101,7 @@ export class MapLibreProjector implements AnyRoutingPlugin {
       data: null,
       type: 'geojson',
       lineMetrics: this.options.sourceLineMetrics === true,
+      tolerance: this.options.sourceTolerance,
     });
 
     this.setLayers(this.options.routeLayersFactory || []);

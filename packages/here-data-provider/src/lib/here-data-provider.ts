@@ -41,6 +41,8 @@ export interface HereRoutingData extends AnyRoutingDataResponse {
   requestOptions: ExecutorRequestOptions;
 }
 
+export type GeoJsonSplitStrategy = 'jamFactor';
+
 export type Options = {
   alternatives?: number;
   worker?: boolean;
@@ -55,7 +57,7 @@ export type Options = {
   requestParams?: RequestInit;
   routeExcludeNotice?: RouteExcludeNoticeDefinitions;
   shapePolylinePrecision?: number;
-  generateRouteName?: boolean;
+  geoJSONShapeSplitStrategies?: { drag?: Array<GeoJsonSplitStrategy>; default?: Array<GeoJsonSplitStrategy> },
   buildUrl?: (ctx: { waypoints: Waypoint[]; options: Options & RequestOptions }, url: string) => string;
 };
 
@@ -65,7 +67,7 @@ const defaultOptions: Partial<Options> = {
   worker: true,
   alternatives: 2,
   shapePolylinePrecision: 0.0000065,
-  generateRouteName: false,
+  geoJSONShapeSplitStrategies: {},
   routeExcludeNotice: {
     critical: 'all',
   },

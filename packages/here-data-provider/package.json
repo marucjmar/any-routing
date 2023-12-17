@@ -1,6 +1,6 @@
 {
   "name": "@any-routing/here-data-provider",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "private": false,
   "dependencies": {
     "comlink": "^4.3.1",

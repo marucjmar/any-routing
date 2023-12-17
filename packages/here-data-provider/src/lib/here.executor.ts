@@ -32,9 +32,7 @@ export class HereExecutor {
         throw new Error('No routes found');
       }
 
-      const routesSummary: HereRouteSummary[] = data.routes.map((route, index) =>
-        summaryRoutes(route, index, opts.shapePolylinePrecision)
-      );
+      const routesSummary: HereRouteSummary[] = data.routes.map((route, index) => summaryRoutes(route, index, opts));
 
       const selectedRouteId = selectRouteByStrategy(routesSummary, opts.selectRouteStrategy);
 
@@ -87,7 +85,7 @@ export class HereExecutor {
   }
 }
 
-const summaryRoutes = (route, routeId, precision): HereRouteSummary => {
+const summaryRoutes = (route, routeId, options: ExecutorRequestOptions): HereRouteSummary => {
   const { distance, cost, durationTime, waypoints, path, shape, shapePath, turnByTurnActions } = route.sections.reduce(
     (acc, section, index) => {
       const cost = (section.tolls || []).reduce(
@@ -114,7 +112,7 @@ const summaryRoutes = (route, routeId, precision): HereRouteSummary => {
       }
 
       const path = decodePolyline(section.polyline);
-      const shapePath = simplifyPath(path, precision);
+      const shapePath = options.shapePolylinePrecision ? simplifyPath(path, options.shapePolylinePrecision) : path;
 
       const turnByTurnActions = (section.turnByTurnActions || []).map((action): TurnByTurnAction => {
         const [lat, lng] = path[action.offset];
@@ -126,10 +124,69 @@ const summaryRoutes = (route, routeId, precision): HereRouteSummary => {
         };
       });
 
-      const shape: Feature<LineString> = lineString(shapePath, {
-        waypoint: acc.waypointIndex,
-        routeId,
-      });
+      let shapes: Feature<LineString>[] = [];
+
+      const shouldSplit: boolean | undefined =
+        (options.mode === 'default' && options.geoJSONShapeSplitStrategies?.default && options.geoJSONShapeSplitStrategies.default.length > 0) ||
+        (options.mode === 'drag' &&
+          options.geoJSONShapeSplitStrategies?.drag &&
+          options.geoJSONShapeSplitStrategies.drag.length > 0);
+
+      if (shouldSplit) {
+        const spansCount: number = section.spans?.length;
+
+        shapes = section.spans?.reduce((shapesAcc: Feature<LineString>[], span, index) => {
+          const closeOffset: number = index < spansCount - 1 ? section.spans[index + 1].offset : path.length - 1;
+          const spanPath = path.slice(span.offset, closeOffset + 1);
+          const shapePath = options.shapePolylinePrecision
+            ? simplifyPath(spanPath, options.shapePolylinePrecision)
+            : spanPath;
+          const isMarginalChunk: boolean = index === 0 || index === spansCount - 1;
+
+          if (
+            ((options.mode === 'default' && options.geoJSONShapeSplitStrategies?.default &&
+              options.geoJSONShapeSplitStrategies.default.includes('jamFactor')) ||
+              (options.mode === 'drag' && options.geoJSONShapeSplitStrategies?.drag?.includes('jamFactor'))) &&
+            span.dynamicSpeedInfo
+          ) {
+            const jamFactor: number = span.dynamicSpeedInfo.trafficSpeed / span.dynamicSpeedInfo.baseSpeed;
+            const prevJamFactor: number = shapesAcc[shapesAcc.length - 1]?.properties?.['jamFactor'];
+
+            if (jamFactor === prevJamFactor && shapesAcc[shapesAcc.length - 1]) {
+              shapesAcc[shapesAcc.length - 1].geometry.coordinates.push(...shapePath.slice(1, shapePath.length));
+              shapesAcc[shapesAcc.length - 1].properties!['isMarginalChunk'] = isMarginalChunk;
+            } else {
+              const shape = lineString(shapePath, {
+                waypoint: acc.waypointIndex,
+                routeId,
+                jamFactor,
+                isMarginalChunk,
+              });
+
+              shapesAcc.push(shape);
+            }
+          } else if (shapesAcc.length > 0) {
+            shapesAcc[shapesAcc.length - 1].geometry.coordinates.push(...shapePath.slice(1, shapePath.length));
+          } else {
+            const shape = lineString(shapePath, {
+              waypoint: acc.waypointIndex,
+              routeId,
+              isMarginalChunk,
+            });
+
+            shapesAcc.push(shape);
+          }
+
+          return shapesAcc;
+        }, []);
+      } else {
+        const line = lineString(shapePath, {
+          waypoint: acc.waypointIndex,
+          routeId,
+        });
+
+        shapes.push(line);
+      }
 
       return {
         distance: acc.distance + section.summary?.length || 0,
@@ -138,7 +195,7 @@ const summaryRoutes = (route, routeId, precision): HereRouteSummary => {
         waypoints: [...acc.waypoints, ...waypoints],
         path: [...acc.path, ...path],
         turnByTurnActions: [...acc.turnByTurnActions, ...turnByTurnActions],
-        shape: featureCollection([...(acc.shape?.features || []), shape]),
+        shape: featureCollection([...(acc.shape?.features || []), ...shapes]),
         shapePath: [...acc.shapePath, ...shapePath],
         waypointIndex:
           section.type === 'vehicle' && route.sections[index + 1] && route.sections[index + 1].type === 'vehicle'

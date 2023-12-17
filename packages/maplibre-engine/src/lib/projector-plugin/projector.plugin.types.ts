@@ -62,5 +62,6 @@ export type MapLibreProjectorOptions = {
   routesWhileDragging?: boolean;
   waypointDragCommitDebounceTime?: number;
   sourceLineMetrics?: boolean;
+  sourceTolerance?: number;
   markerFactory: (ctx: MarkerFactoryContext) => Marker;
 };
