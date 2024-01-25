@@ -9,7 +9,7 @@ A full featured(performance focused), modular, light directions plugin for all m
 ## Installation
 
 ```js
-npm i --save @any-routing/core @any-routing/maplibre-engine @any-routing/annontation-plugin
+npm i --save @any-routing/core @any-routing/maplibre-engine @any-routing/annotation-plugin
 ```
 
 ## Example
