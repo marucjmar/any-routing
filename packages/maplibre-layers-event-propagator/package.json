@@ -1,4 +1,8 @@
 {
   "name": "@any-routing/maplibre-layers-event-propagator",
-  "version": "0.1.0"
+  "version": "0.1.1",
+  "peerDependencies": {
+    "maplibre-gl": "^3",
+    "mapbox-gl": "^3"
+  }
 }

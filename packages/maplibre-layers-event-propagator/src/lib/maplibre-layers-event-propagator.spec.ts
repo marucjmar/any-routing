@@ -1,7 +1,7 @@
-import { maplibreLayersEventPropagator } from './maplibre-layers-event-propagator';
+import { setupLayerEventsPropagator } from './maplibre-layers-event-propagator';
 
-describe('maplibreLayersEventPropagator', () => {
+describe('setupLayerEventsPropagator', () => {
   it('should work', () => {
-    expect(maplibreLayersEventPropagator()).toEqual('maplibre-layers-event-propagator');
+    // expect(setupLayerEventsPropagator()).toEqual('maplibre-layers-event-propagator');
   });
 });

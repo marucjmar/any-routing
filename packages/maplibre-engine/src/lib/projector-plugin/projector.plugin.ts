@@ -98,7 +98,7 @@ export class MapLibreProjector implements AnyRoutingPlugin {
     this._sourceId = this.options.routesSourceId ?? this.routing.getUniqueName('any-routing-maplibre-projector');
 
     this.map.addSource(this._sourceId, {
-      data: null,
+      data: featureCollection([]),
       type: 'geojson',
       lineMetrics: this.options.sourceLineMetrics === true,
       tolerance: this.options.sourceTolerance,
@@ -181,7 +181,7 @@ export class MapLibreProjector implements AnyRoutingPlugin {
             lat: event.target._lngLat.lat,
             lng: event.target._lngLat.lng,
           },
-          geocoded: false
+          geocoded: false,
         };
 
         this.dispatcher.fire('waypointDrag', {
@@ -206,7 +206,7 @@ export class MapLibreProjector implements AnyRoutingPlugin {
             lat: e.target._lngLat.lat,
             lng: e.target._lngLat.lng,
           },
-          geocoded: false
+          geocoded: false,
         };
 
         this.dispatcher.fire('waypointDragEnd', {
@@ -223,14 +223,14 @@ export class MapLibreProjector implements AnyRoutingPlugin {
   public destroy(): void {
     this.layers.forEach((layer) => {
       if (this.map?.getLayer(layer.specification.id)) {
-        this.map?.removeLayer(layer.specification.id)
+        this.map?.removeLayer(layer.specification.id);
       }
     });
 
     if (this.map?.getSource(this._sourceId)) {
       this.map?.removeSource(this._sourceId);
     }
- 
+
     this._waypointsMarkers?.forEach((waypointMarker) => waypointMarker.remove());
     this.unbindLayerEvents();
   }
@@ -263,8 +263,8 @@ export class MapLibreProjector implements AnyRoutingPlugin {
 
     if (state.routesShapeGeojson || state.data?.routesShapeBounds) {
       bounds = state.data?.routesShapeBounds
-        ? new LngLatBounds(state.data.routesShapeBounds)
-        : new LngLatBounds(bbox(state.routesShapeGeojson));
+        ? new LngLatBounds(state.data.routesShapeBounds as [number, number, number, number])
+        : new LngLatBounds(bbox(state.routesShapeGeojson) as [number, number, number, number]);
     } else if (state.waypoints.length > 0) {
       bounds = new LngLatBounds();
 

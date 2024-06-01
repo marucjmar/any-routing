@@ -1,5 +1,18 @@
-//@ts-nocheck
-import { Map, MapLayerMouseEvent, MapMouseEvent } from 'maplibre-gl';
+// @ts-nocheck
+import type {
+  Map as MapLibreMap,
+  MapLayerMouseEvent as MapLayerMouseEventMapLibre,
+  MapMouseEvent as MapMouseEventMapLibre,
+} from 'maplibre-gl';
+import type {
+  Map as MapBoxMap,
+  MapLayerMouseEvent as MapLayerMouseEventMapBox,
+  MapMouseEvent as MapMouseEventMapBox,
+} from 'mapbox-gl';
+
+type Map = MapBoxMap | MapLibreMap;
+type MapLayerMouseEvent = MapLayerMouseEventMapLibre | MapLayerMouseEventMapBox;
+type MapMouseEvent = MapMouseEventMapBox | MapMouseEventMapLibre;
 
 export type PropagationEvent<E extends MapLayerMouseEvent | MapMouseEvent> = E & {
   stopPropagationCancelledLayerId?: string;
@@ -69,12 +82,12 @@ function wrapCallback(originalCallback) {
 }
 
 export function setupLayerEventsPropagator(map: Map): void {
-  if ('_maplibreLayersEventPropagatorAdded' in map) {
+  if ('_anyRoutingLayersEventPropagatorAdded' in map) {
     return;
   }
 
   //@ts-ignore
-  map._maplibreLayersEventPropagatorAdded = true;
+  map._anyRoutingLayersEventPropagatorAdded = true;
 
   const originalOn = map.on;
   let layers = map.getStyle().layers.map((l) => l.id);
