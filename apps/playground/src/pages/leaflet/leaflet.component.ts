@@ -75,7 +75,7 @@ export class LeafletComponent implements AfterViewInit {
         { position: { lng: 21.01178, lat: 52.22977 }, properties: { label: 'B' } },
       ]);
 
-      routing.recalculateRoute();
+      routing.recalculateRoute().then(() => projector.fitViewToData());
     // });
   }
 }
