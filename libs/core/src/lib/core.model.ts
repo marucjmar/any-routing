@@ -170,6 +170,9 @@ export type AnyRoutingProjectorEventMap = {
   routeClick: {
     routeId: number;
   };
+  routeHighlight: {
+    routeId?: number;
+  };
   viewStateChanged: {
     state: AnyRoutingState;
     reason: 'route' | 'waypoints' | 'interaction';
@@ -180,6 +183,7 @@ export interface AnyRoutingProjector {
   waypoints: InternalWaypoint[];
   onAdd(routing: AnyRouting<any>): void;
   onRemove(routing: AnyRouting<any>): void;
+  highlightRoute?(routeId?: number): void;
   on<E extends keyof AnyRoutingProjectorEventMap>(
     event: E,
     callback: (event: AnyRoutingProjectorEventMap[E]) => void,

@@ -4,7 +4,9 @@ import {
   GeoJSONSource,
   LngLatBounds,
   Map,
+  MapGeoJSONFeature,
   MapLayerMouseEvent,
+  MapMouseEvent,
   Marker,
 } from 'maplibre-gl';
 import {
@@ -32,6 +34,10 @@ interface LatLng {
   lat: number;
   lng: number;
 }
+
+type RouteMouseEvent = MapMouseEvent & {
+  features?: MapGeoJSONFeature[];
+};
 
 const DEFAULT_OPTIONS = {
   maxWaypoints: Infinity,
@@ -85,6 +91,9 @@ export class MapLibreProjector implements AnyRoutingProjector {
   private lastHoverFeatureId?: number;
   private waypointMarkerAdded = false;
   private activeDragCleanup?: () => void;
+  private highlightedRouteId?: number;
+  private routeMoveFrame?: number;
+  private pendingRouteMove?: LatLng;
   private recalculationId = 0;
   private previewRequestId = 0;
   private previewLoading = false;
@@ -116,10 +125,8 @@ export class MapLibreProjector implements AnyRoutingProjector {
   };
 
   private readonly routeClickHandler = this.onRouteClick.bind(this);
-  private readonly routeHoverHandler = this.onRouteHover.bind(this);
-  private readonly routeHoverOutHandler = this.onRouteHoverOut.bind(this);
   private readonly routeMouseDownHandler = this.onRouteMouseDown.bind(this);
-  private readonly routeMoveHandler = this.onRouteMove.bind(this);
+  private readonly mapMouseMoveHandler = this.onMapMouseMove.bind(this);
   private readonly dragCommitHandler: ((
     newWaypoints: InternalWaypoint[],
     index: number,
@@ -192,6 +199,11 @@ export class MapLibreProjector implements AnyRoutingProjector {
 
   public destroy(): void {
     this.recalculationId += 1;
+    if (this.routeMoveFrame !== undefined) {
+      cancelAnimationFrame(this.routeMoveFrame);
+      this.routeMoveFrame = undefined;
+    }
+    this.pendingRouteMove = undefined;
     this.routing?.off('stateUpdated', this.stateUpdatedHandler);
     this.dragCommitHandler.cancel();
     this.activeDragCleanup?.();
@@ -407,7 +419,7 @@ export class MapLibreProjector implements AnyRoutingProjector {
     }
   }
 
-  private onRouteHover(event: MapLayerMouseEvent): void {
+  private onRouteHover(event: RouteMouseEvent): void {
     if (!this._hoverEnabled) return;
 
     this.map.getCanvas().style.cursor = 'pointer';
@@ -432,16 +444,10 @@ export class MapLibreProjector implements AnyRoutingProjector {
       this.showAddWaypointMarker(event.lngLat);
     }
 
-    if (props?.routeId == null || this.lastHoverFeatureId === props?.routeId) return;
+    if (props?.routeId == null || this.lastHoverFeatureId === props.routeId) return;
 
-    this.map.querySourceFeatures(this._sourceId).forEach((f) => {
-      if ((f.properties as RouteFeatureProperties).routeId !== props?.routeId) return;
-
-      this.map.setFeatureState({ source: this._sourceId, id: f.id }, { hover: true });
-    });
-
-    this.lastHoverFeatureId = props?.routeId;
-    this.bringLineToTop(props?.routeId ?? this.routing.state.selectedRouteId ?? 0);
+    this.lastHoverFeatureId = props.routeId;
+    this.highlightRoute(props.routeId);
   }
 
   private onRouteHoverOut(): void {
@@ -450,20 +456,33 @@ export class MapLibreProjector implements AnyRoutingProjector {
     this.map.getCanvas().style.cursor = '';
     this.addWaypointMarker.remove();
     this.waypointMarkerAdded = false;
-
-    if (this.lastHoverFeatureId != null) {
-      this.map.querySourceFeatures(this._sourceId).forEach((f) => {
-        if ((f.properties as RouteFeatureProperties).routeId !== this.lastHoverFeatureId) return;
-
-        this.map.setFeatureState({ source: this._sourceId, id: f.id }, { hover: false });
-      });
-
-      this.bringLineToTop(this.routing.state.selectedRouteId ?? 0);
-      this.lastHoverFeatureId = undefined;
+    this.pendingRouteMove = undefined;
+    if (this.routeMoveFrame !== undefined) {
+      cancelAnimationFrame(this.routeMoveFrame);
+      this.routeMoveFrame = undefined;
     }
+
+    this.lastHoverFeatureId = undefined;
+    this.highlightRoute();
   }
 
-  private onRouteMove(event: MapLayerMouseEvent): void {
+  private onMapMouseMove(event: MapMouseEvent): void {
+    const features = this.map.queryRenderedFeatures(event.point, {
+      layers: this.routesLayerIds,
+    });
+
+    if (features.length === 0) {
+      this.onRouteHoverOut();
+      return;
+    }
+
+    const routeEvent = event as RouteMouseEvent;
+    routeEvent.features = features;
+    this.onRouteHover(routeEvent);
+    this.onRouteMove(routeEvent);
+  }
+
+  private onRouteMove(event: RouteMouseEvent): void {
     if (
       !this._canAddWaypoints ||
       this.waypoints.length >= this._maxWaypoints ||
@@ -479,7 +498,21 @@ export class MapLibreProjector implements AnyRoutingProjector {
       props?.routeId === this.routing.state.selectedRouteId
     ) {
       this.stopEventPropagation(event);
-      this.showAddWaypointMarker(event.lngLat);
+      this.pendingRouteMove = {
+        lat: event.lngLat.lat,
+        lng: event.lngLat.lng,
+      };
+
+      if (this.routeMoveFrame === undefined) {
+        this.routeMoveFrame = requestAnimationFrame(() => {
+          this.routeMoveFrame = undefined;
+          const position = this.pendingRouteMove;
+          this.pendingRouteMove = undefined;
+          if (position) {
+            this.showAddWaypointMarker(position);
+          }
+        });
+      }
     }
   }
 
@@ -635,15 +668,19 @@ export class MapLibreProjector implements AnyRoutingProjector {
       this.map.getCanvas().style.cursor = '';
       this.addWaypointMarker?.remove();
       this.waypointMarkerAdded = false;
-      if (this.lastHoverFeatureId != null) {
-        this.map.querySourceFeatures(this._sourceId).forEach((f) => {
-          if ((f.properties as RouteFeatureProperties).routeId !== this.lastHoverFeatureId) return;
-          this.map.setFeatureState({ source: this._sourceId, id: f.id }, { hover: false });
-        });
-        this.bringLineToTop(this.routing.state.selectedRouteId ?? 0);
-        this.lastHoverFeatureId = undefined;
-      }
+      this.lastHoverFeatureId = undefined;
+      this.highlightRoute();
     }
+  }
+
+  public highlightRoute(routeId?: number): void {
+    if (this.highlightedRouteId === routeId) {
+      return;
+    }
+
+    this.highlightedRouteId = routeId;
+    this.dispatcher.fire('routeHighlight', { routeId });
+    this.updateRouteHoverState();
   }
 
   // ---------------------------------------------------------------------
@@ -651,18 +688,39 @@ export class MapLibreProjector implements AnyRoutingProjector {
   // ---------------------------------------------------------------------
 
   /** Type-safe accessor for route-feature properties (single cast point). */
-  private getFeatureProperties(event: MapLayerMouseEvent): RouteFeatureProperties | undefined {
+  private getFeatureProperties(event: RouteMouseEvent): RouteFeatureProperties | undefined {
     return event.features?.[0]?.properties as RouteFeatureProperties | undefined;
   }
 
   private getRouteHoverFeature(
-    event: MapLayerMouseEvent,
+    event: RouteMouseEvent,
   ): Feature<Geometry, RouteFeatureProperties> | undefined {
     return event.features?.[0] as Feature<Geometry, RouteFeatureProperties> | undefined;
   }
 
   private getSource(): GeoJSONSource | undefined {
     return this.map?.getSource(this._sourceId) as GeoJSONSource | undefined;
+  }
+
+  private updateRouteHoverState(): void {
+    const activeRouteId = this.highlightedRouteId ?? this.lastHoverFeatureId;
+
+    this.map.querySourceFeatures(this._sourceId).forEach((feature) => {
+      const routeId = (feature.properties as RouteFeatureProperties).routeId;
+      this.map.setFeatureState(
+        { source: this._sourceId, id: feature.id },
+        { hover: routeId === activeRouteId },
+      );
+    });
+
+    this.routing.state.routesShapeGeojson?.features.forEach((feature) => {
+      this.map.setFeatureState(
+        { source: this._sourceId, id: feature.id },
+        { hover: feature.properties.routeId === activeRouteId },
+      );
+    });
+
+    this.bringLineToTop(activeRouteId ?? this.routing.state.selectedRouteId ?? 0);
   }
 
   private createWaypointAt(lngLat: LatLng, index: number): InternalWaypoint {
@@ -767,24 +825,17 @@ export class MapLibreProjector implements AnyRoutingProjector {
   private bindLayerEvents(): void {
     this.routesLayerIds.forEach((layerId) => {
       this.map.on('click', layerId, this.routeClickHandler);
-      this.map.on('mouseenter', layerId, this.routeHoverHandler);
-      this.map.on('mouseleave', layerId, this.routeHoverOutHandler);
       this.map.on('mousedown', layerId, this.routeMouseDownHandler);
-      this.map.on('mousemove', layerId, this.routeMoveHandler);
     });
+    this.map.on('mousemove', this.mapMouseMoveHandler);
   }
 
   private unbindLayerEvents(): void {
     this.routesLayerIds.forEach((layerId) => {
       this.map.off('click', layerId, this.routeClickHandler);
-      this.map.off('mouseenter', layerId, this.routeHoverHandler);
-      this.map.off('mouseleave', layerId, this.routeHoverOutHandler);
-      // Bug fix: this previously unbound the wrong handler
-      // (routeMoveHandler instead of routeMouseDownHandler) on "mousedown",
-      // which meant the mousedown listener was never actually removed.
       this.map.off('mousedown', layerId, this.routeMouseDownHandler);
-      this.map.off('mousemove', layerId, this.routeMoveHandler);
     });
+    this.map.off('mousemove', this.mapMouseMoveHandler);
   }
 
   private eventIsCancelled(event: MapLayerMouseEvent): boolean {

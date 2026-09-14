@@ -43,6 +43,11 @@ export class AnnotationPlugin implements AnyRoutingPlugin {
   private data: AnyRoutingDataResponse | undefined;
   private components: AnnotationPopupComponentI[] = [];
   private popupElementsByRouteId = new Map<number, HTMLElement>();
+  private popupZIndexRouteId?: number;
+  private popupHoverHandlers = new Map<
+    number,
+    { enter: () => void; leave: () => void }
+  >();
   private animationFrame?: number;
   private recalculationInProgress = false;
   private recalculationRequested = false;
@@ -56,16 +61,16 @@ export class AnnotationPlugin implements AnyRoutingPlugin {
     this.destroyView();
   };
   private routeCalculatedHandler = this.routeCalculated.bind(this);
+  private routeSelectedHandler = (event: { routeId: number }) => {
+    this.raisePopupZIndex(event.routeId);
+  };
+  private routeHighlightHandler = (event: { routeId?: number }) => {
+    this.raisePopupZIndex(event.routeId ?? this.ctx.selectedRouteId ?? undefined);
+  };
 
   private mapMoveEndHandler = () => {
-    // if (this.animationFrame !== undefined) {
-    //   return;
-    // }
-
-    this.animationFrame = requestAnimationFrame(() => {
       this.animationFrame = undefined;
       void this.recalculate(true);
-    });
   };
 
   constructor(options: Require<Partial<AnnotationPluginOptions>, 'map'>) {
@@ -84,8 +89,10 @@ export class AnnotationPlugin implements AnyRoutingPlugin {
     this.ctx = ctx;
 
     this.ctx.on('routesFound', this.routeCalculatedHandler);
+    this.ctx.on('routeSelected', this.routeSelectedHandler);
     this.ctx.projector?.on('waypointDrag', this.clearMapHandler);
     this.ctx.projector?.on('previewStarted', this.clearMapHandler);
+    this.ctx.projector?.on('routeHighlight', this.routeHighlightHandler);
 
     this.map.on(this.options.calculatePopupOnFly ? 'render' : 'idle', this.mapMoveEndHandler);
 
@@ -100,8 +107,10 @@ export class AnnotationPlugin implements AnyRoutingPlugin {
       this.animationFrame = undefined;
     }
     this.ctx.off('routesFound', this.routeCalculatedHandler);
+    this.ctx.off('routeSelected', this.routeSelectedHandler);
     this.ctx.projector?.off('waypointDrag', this.clearMapHandler);
     this.ctx.projector?.off('previewStarted', this.clearMapHandler);
+    this.ctx.projector?.off('routeHighlight', this.routeHighlightHandler);
     this.worker.terminate();
     this.destroyView();
   }
@@ -228,14 +237,15 @@ export class AnnotationPlugin implements AnyRoutingPlugin {
 
     this.bounds = bbox(featureCollection(points.map((p) => point(p.lngLat))));
 
-    this.components = [];
-    this.popupElementsByRouteId.clear();
+    let addedNewPopups = false;
 
     points.forEach((point) => {
       if (this.popups.has(point.properties.routeId)) {
         this.popups.get(point.properties.routeId)!.setLngLat(point.lngLat as [number, number]);
         return;
       }
+
+      addedNewPopups = true;
 
       const component = this.options.componentFactory(point.properties.routeId, data, this.ctx);
 
@@ -257,30 +267,67 @@ export class AnnotationPlugin implements AnyRoutingPlugin {
       if (popupContent) popupContent.style.padding = '0';
 
       this.popupElementsByRouteId.set(point.properties.routeId, popupElem);
+      this.bindPopupRouteHighlight(popupElem, point.properties.routeId);
 
       this.components.push(component);
       this.popups.set(point.properties.routeId, popup);
     });
 
-    if (this.ctx.selectedRouteId !== undefined && this.ctx.selectedRouteId !== null) {
+    if (this.ctx.selectedRouteId != null && addedNewPopups) {
       this.raisePopupZIndex(this.ctx.selectedRouteId);
     }
   }
 
-  private raisePopupZIndex(selectedRouteId: number): void {
+  private raisePopupZIndex(selectedRouteId?: number): void {
+    const selectedPopup =
+      selectedRouteId === undefined
+        ? undefined
+        : this.popupElementsByRouteId.get(selectedRouteId);
+    const popupContainer = selectedPopup?.parentElement;
+
+    if (
+      this.popupZIndexRouteId === selectedRouteId &&
+      (!selectedPopup || popupContainer?.lastElementChild === selectedPopup)
+    ) {
+      return;
+    }
+
     this.popupElementsByRouteId.forEach((popupElem, routeId) => {
       popupElem.style.zIndex = routeId === selectedRouteId ? '10' : '';
     });
+
+    if (selectedPopup && popupContainer && popupContainer.lastElementChild !== selectedPopup) {
+      popupContainer.appendChild(selectedPopup);
+    }
+
+    this.popupZIndexRouteId = selectedRouteId;
   }
 
   private destroyView() {
     this.allInBbox = false;
+    this.ctx.projector?.highlightRoute?.();
     this.components.forEach((c) => c.destroy());
     this.popups.forEach((p) => p.remove());
+    this.popupHoverHandlers.forEach((handlers, routeId) => {
+      const popupElem = this.popupElementsByRouteId.get(routeId);
+      popupElem?.removeEventListener('mouseenter', handlers.enter);
+      popupElem?.removeEventListener('mouseleave', handlers.leave);
+    });
 
     this.popups = new Map();
     this.components = [];
     this.popupElementsByRouteId.clear();
+    this.popupHoverHandlers.clear();
+    this.popupZIndexRouteId = undefined;
+  }
+
+  private bindPopupRouteHighlight(popupElem: HTMLElement, routeId: number): void {
+    const enter = () => this.ctx.projector?.highlightRoute?.(routeId);
+    const leave = () => this.ctx.projector?.highlightRoute?.();
+
+    popupElem.addEventListener('mouseenter', enter);
+    popupElem.addEventListener('mouseleave', leave);
+    this.popupHoverHandlers.set(routeId, { enter, leave });
   }
 
   private areBoundsEqual(first: LngLatBounds, second: LngLatBounds): boolean {
