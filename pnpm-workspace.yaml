@@ -1,0 +1,15 @@
+allowBuilds:
+  nx: true
+  esbuild: false
+  '@parcel/watcher': true
+  lmdb: true
+  msgpackr-extract: true
+
+minimumReleaseAgeExclude:
+  - maplibre-gl@6.8.0
+
+packages:
+  - 'packages/*'
+  - 'libs/*'
+  - 'apps/*'
+  

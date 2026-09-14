@@ -1,0 +1,15 @@
+{
+  "name": "@any-routing/maplibre-engine",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "@any-routing/core": "workspace:*",
+    "@turf/bbox": "7.4.0",
+    "@turf/helpers": "7.4.0",
+    "@types/geojson": "7946.0.16",
+    "maplibre-gl": "6.8.0"
+  }
+}

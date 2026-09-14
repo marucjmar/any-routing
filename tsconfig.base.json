@@ -4,22 +4,34 @@
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
+    "strict": false,
     "paths": {
-      "@any-routing/annotation-plugin": ["packages/annotation-plugin/src/index.ts"],
-      "@any-routing/core": ["packages/core/src/index.ts"],
-      "@any-routing/here-data-provider": ["packages/here-data-provider/src/index.ts"],
-      "@any-routing/maplibre-engine": ["packages/maplibre-engine/src/index.ts"],
-      "@any-routing/maplibre-layers-event-propagator": ["packages/maplibre-layers-event-propagator/src/index.ts"]
+      "@any-routing/core": ["./libs/core/src/index.ts"],
+      "@any-routing/maplibre-engine": ["./libs/maplibre-engine/src/index.ts"],
+      "@any-routing/here-data-provider": ["./libs/here-data-provider/src/index.ts"],
+      "@any-routing/here-data-providerx": [
+        "./apps/playground/libs/here-data-providerx/src/index.ts"
+      ],
+      "@any-routing/line-loader": ["./libs/line-loader/src/index.ts"],
+      "@any-routing/line-loader/leaflet": ["./libs/line-loader/src/leaflet.ts"],
+      "@any-routing/line-loader/maplibre": ["./libs/line-loader/src/maplibre.ts"],
+      "@any-routing/leaflet-engine": ["./libs/leaflet-engine/src/index.ts"],
+      "@any-routing/annotation-plugin": ["./libs/annotation-plugin/src/index.ts"],
+      "@any-routing/annotation-plugin/leaflet": ["./libs/annotation-plugin/src/leaflet.ts"],
+      "@any-routing/annotation-plugin/maplibre": ["./libs/annotation-plugin/src/maplibre.ts"],
+      "@any-routing/osrm-data-provider": ["./libs/osrm-data-provider/src/index.ts"],
+      "@any-routing/ors-data-provider": ["./libs/ors-data-provider/src/index.ts"],
+      "@any-routing/valhalla-data-provider": ["./libs/valhalla-data-provider/src/index.ts"],
+      "@any-routing/mapbox-data-provider": ["./libs/mapbox-data-provider/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

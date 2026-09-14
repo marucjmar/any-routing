@@ -1,0 +1,48 @@
+{
+  "name": "@any-routing/line-loader",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "*.js",
+    "*.d.ts",
+    "assets",
+    "README.md",
+    "package.json"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./maplibre": {
+      "types": "./maplibre.d.ts",
+      "import": "./maplibre.js"
+    },
+    "./leaflet": {
+      "types": "./leaflet.d.ts",
+      "import": "./leaflet.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "@any-routing/core": "^0.0.1",
+    "maplibre-gl": "^6.8.0",
+    "leaflet": "^1.9.4"
+  },
+  "peerDependenciesMeta": {
+    "leaflet": {
+      "optional": true
+    },
+    "maplibre-gl": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@turf/helpers": "7.4.0",
+    "@types/geojson": "7946.0.16",
+    "@types/leaflet": "^1.9.22"
+  }
+}

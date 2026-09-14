@@ -1,0 +1,15 @@
+{
+  "name": "@any-routing/ors-data-provider",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "@any-routing/core": "workspace:*",
+    "comlink": "4.4.2",
+    "@turf/bbox": "7.4.0",
+    "@turf/helpers": "7.4.0",
+    "@types/geojson": "7946.0.16"
+  }
+}

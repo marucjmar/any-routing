@@ -1,0 +1,14 @@
+{
+  "name": "@any-routing/leaflet-engine",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "@turf/bbox": "7.4.0",
+    "@turf/helpers": "7.4.0",
+    "@types/geojson": "7946.0.16",
+    "@types/leaflet": "^1.9.22",
+    "leaflet": "^1.9.4"
+  }
+}
