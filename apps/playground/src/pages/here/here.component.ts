@@ -472,7 +472,7 @@ export class HereComponent implements AfterViewInit {
       "    { position: { lng: -3.385644, lat: 40.484768 }, properties: { label: 'A' } },",
       "    { position: { lng: 23.064007, lat: 52.749891 }, properties: { label: 'B' } },",
       '  ]);',
-      '  routing.recalculateRoute({ fitViewToData: true });',
+      '  routing.recalculateRoute(),then(() => projector.fitViewToData());',
       '});',
     ].filter((line): line is string => line !== undefined);
 
@@ -555,8 +555,9 @@ export class HereComponent implements AfterViewInit {
         { position: { lng: 23.064007, lat: 52.749891 }, properties: { label: 'C' } },
       ]);
 
-      routing.recalculateRoute();
-      routing.projector?.fitViewToData({ padding: 10 });
+      routing.recalculateRoute().then(() => {
+        projector.fitViewToData({ padding: 40 });
+      });
     });
   }
 
