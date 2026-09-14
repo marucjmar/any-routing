@@ -65,7 +65,7 @@ map.on('load', () => {
 
 - ✅ [Here API](https://www.here.com/)
 - ✅ [MapBox API](https://docs.mapbox.com/help/glossary/directions-api/)
-- ✅ [Google Routes API](https://developers.google.com/maps/documentation/routes/compute_route_directions?hl=pl)
+- ✅ [Google Routes API](https://developers.google.com/maps/documentation/routes/compute_route_directions)
 - ✅ [ORS API](https://openrouteservice.org/)
 - ✅ [OSRM API](https://github.com/Project-OSRM/osrm-backend)
 - ✅ [Valhalla API](https://valhalla.github.io/valhalla/api/)
