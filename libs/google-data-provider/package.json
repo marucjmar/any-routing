@@ -1,0 +1,14 @@
+{
+  "name": "@any-routing/google-data-provider",
+  "version": "1.0.0-rc.1",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "@any-routing/core": "workspace:*",
+    "@turf/bbox": "7.4.0",
+    "@turf/helpers": "7.4.0",
+    "@types/geojson": "7946.0.16",
+    "comlink": "4.4.2"
+  }
+}

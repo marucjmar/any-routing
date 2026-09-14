@@ -343,6 +343,24 @@ importers:
         specifier: 7946.0.16
         version: 7946.0.16
 
+  libs/google-data-provider:
+    dependencies:
+      '@any-routing/core':
+        specifier: workspace:*
+        version: link:../core
+      '@turf/bbox':
+        specifier: 7.4.0
+        version: 7.4.0
+      '@turf/helpers':
+        specifier: 7.4.0
+        version: 7.4.0
+      '@types/geojson':
+        specifier: 7946.0.16
+        version: 7946.0.16
+      comlink:
+        specifier: 4.4.2
+        version: 4.4.2
+
   libs/here-data-provider:
     dependencies:
       '@any-routing/core':
