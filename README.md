@@ -63,16 +63,17 @@ map.on('load', () => {
 
 ## Supported data providers
 
-- [x] [Here API](https://www.here.com/)
-- [x] [MapBox API](https://docs.mapbox.com/help/glossary/directions-api/)
-- [x] [ORS API](https://openrouteservice.org/)
-- [x] [OSRM API](https://github.com/Project-OSRM/osrm-backend)
-- [x] [Valhalla API](https://valhalla.github.io/valhalla/api/)
+- ✅ [Here API](https://www.here.com/)
+- ✅ [MapBox API](https://docs.mapbox.com/help/glossary/directions-api/)
+- ✅ [Google Routes API](https://developers.google.com/maps/documentation/routes/compute_route_directions?hl=pl)
+- ✅ [ORS API](https://openrouteservice.org/)
+- ✅ [OSRM API](https://github.com/Project-OSRM/osrm-backend)
+- ✅ [Valhalla API](https://valhalla.github.io/valhalla/api/)
 
 ## Supported Map engine
 
-- [x] [MapLibre GL JS](https://maplibre.org/maplibre-gl-js-docs/api/)
-- [x] [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/guides/)
+- ✅ [MapLibre GL JS](https://maplibre.org/maplibre-gl-js-docs/api/)
+- ✅ [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/guides/)
 - [ ] [Leaflet](https://leafletjs.com/)
 - [ ] [OpenLayers](https://openlayers.org/)
 
