@@ -136,6 +136,7 @@ export class LeafletProjector implements AnyRoutingProjector {
   private routesLayer?: GeoJSON;
   private routeOutlineLayer?: GeoJSON;
   private hoveredRouteLayer?: Path;
+  private readonly routeFeatures = new WeakMap<Path, LeafletRouteFeature>();
   private activeDragCleanup?: () => void;
   private recalculationId = 0;
   private previewRequestId = 0;
@@ -156,15 +157,9 @@ export class LeafletProjector implements AnyRoutingProjector {
   private readonly stateUpdatedHandler = (
     event: RoutingEvents<AnyRoutingDataResponse>['stateUpdated'],
   ): void => {
-    const touchedRouteOrWaypoints =
-      event.updatedProperties.includes('routesShapeGeojson') ||
-      event.updatedProperties.includes('waypoints');
-
-    if (!touchedRouteOrWaypoints) return;
-
     if (event.updatedProperties.includes('routesShapeGeojson')) {
       if (event.state.routesShapeGeojson) {
-      this.projectRoute(event.state.routesShapeGeojson);
+        this.projectRoute(event.state.routesShapeGeojson);
       } else {
         this.clearRoutes();
       }
@@ -345,22 +340,18 @@ export class LeafletProjector implements AnyRoutingProjector {
 
   private getRouteStyle(feature: LeafletRouteFeature): LeafletRouteStyle {
     const routeId = feature.properties?.routeId;
-    const selected =
-      feature.properties?.selected === true || routeId === this.routing.state.selectedRouteId;
-
-    const routeColors = ['#E53935', '#43A047', '#1E88E5'];
-    const routeColor = routeId == null ? undefined : routeColors[routeId];
+    const selected = routeId === this.routing.state.selectedRouteId;
 
     return {
       ...(selected ? this.options.selectedRouteStyle : this.options.routeStyle),
-      ...(routeColor && !selected ? { color: routeColor } : {}),
-
-      // Leaflet's zIndexOffset is available on Marker,
-      // but not directly on Path. pane is a better equivalent.
     };
   }
 
   private bindRouteFeature(feature: LeafletRouteFeature, layer: Layer): void {
+    if (layer instanceof Path) {
+      this.routeFeatures.set(layer, feature);
+    }
+
     layer.on({
       click: (event: LeafletMouseEvent) => {
         this.onRouteClick(event, feature, layer);
@@ -602,7 +593,6 @@ export class LeafletProjector implements AnyRoutingProjector {
 
     const waypoint = this.createWaypointAt(event.latlng, newWaypointIndex);
 
-    console.log(this.routing.state.routesShapeGeojson)
     const newWaypointMarker = this.options
       .markerFactory({ waypoint })
       .setLatLng(event.latlng)
@@ -933,7 +923,9 @@ export class LeafletProjector implements AnyRoutingProjector {
   private bringSelectedRouteToFront(): void {
     const selectedRouteId = this.routing.state.selectedRouteId;
     const getFeature = (layer: Layer): LeafletRouteFeature | undefined =>
-      (layer as Layer & { feature?: LeafletRouteFeature }).feature;
+      layer instanceof Path
+        ? this.routeFeatures.get(layer)
+        : (layer as Layer & { feature?: LeafletRouteFeature }).feature;
     const outlineLayers: Path[] = [];
     const routeLayers: Path[] = [];
 
@@ -944,6 +936,10 @@ export class LeafletProjector implements AnyRoutingProjector {
     });
     this.routesLayer?.eachLayer((layer) => {
       if (layer instanceof Path) {
+        const feature = getFeature(layer);
+        if (feature) {
+          layer.setStyle(this.getRouteStyle(feature));
+        }
         routeLayers.push(layer);
       }
     });
