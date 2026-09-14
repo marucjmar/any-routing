@@ -27,8 +27,8 @@ const map = new Map({...});
 
 const dataProvider = new HereProvider({ apiKey: '1234' });
 const previewDataProvider = new HereProvider({
-    apiKey: environment.hereApiKey,
-    alternatives: 0,
+    apiKey: '1234',
+    alternatives: 0, //only one route to drag preview
 });
 
 const projector = new MapLibreProjector({
@@ -40,8 +40,9 @@ const projector = new MapLibreProjector({
 
 const routing = new AnyRouting<HereRoutingData>({
   dataProvider,
+  projector,
   waypointsSyncStrategy: 'none',
-  plugins: [projector, new AnnotationPlugin({ map })],
+  plugins: [new AnnotationPlugin({ map })],
 });
 
 routing.on('routesFound', console.log);
@@ -50,12 +51,12 @@ routing.on('routeSelected', console.log);
 map.on('load', () => {
   routing.initialize();
   routing.setWaypoints([
-    { position: { lat: 49.9539315, lng: 18.8531001 }, properties: { label: 'A' } },
-    { position: { lng: 21.01178, lat: 52.22977 }, properties: { label: 'B' } },
+    { position: { lng: -3.385644, lat: 40.484768 }, properties: { label: 'B' } },
+    { position: { lng: 23.064007, lat: 52.749891 }, properties: { label: 'C' } },
   ]);
 
   routing.recalculateRoute().then(() => {
-    projector.fitViewToData();
+    projector.fitViewToData({ padding: 20 });
   });
 });
 ```
