@@ -158,6 +158,9 @@ importers:
       postcss:
         specifier: ^8.5.28
         version: 8.5.28
+      primeicons:
+        specifier: ^8.0.1
+        version: 8.0.1
       primeng:
         specifier: ^21.1.9
         version: 21.1.9(06e8a99758f33279700aa277fc162656)
@@ -5761,6 +5764,9 @@ packages:
     resolution: {integrity: sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==}
     engines: {node: '>=14'}
     hasBin: true
+
+  primeicons@8.0.1:
+    resolution: {integrity: sha512-5O1zIpEKUk0pKfEQSdNVJRxPivo0271zAe7vnZGl+fughxixv4PnVou2J6pPy2wy83nrDn58BqeBwWnpCZmjkw==}
 
   primeng@21.1.9:
     resolution: {integrity: sha512-Z76PtF08X0PNSTCNMobao8Qm71vC56mtZSdUtX/gsn4+q4x0NbUUtkeK1pc33a+kxVm2zkmOwzUIEGmb9VdoIA==}
@@ -13151,6 +13157,8 @@ snapshots:
   prelude-ls@1.2.1: {}
 
   prettier@3.9.6: {}
+
+  primeicons@8.0.1: {}
 
   primeng@21.1.9(06e8a99758f33279700aa277fc162656):
     dependencies:
