@@ -3,8 +3,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/core/src",
   "projectType": "library",
-  "tags": [],
-  "// targets": "to see all targets run: nx show project core --web",
   "release": {
     "version": {
       "manifestRootsToUpdate": ["dist/{projectRoot}"],
@@ -12,6 +10,7 @@
       "fallbackCurrentVersionResolver": "disk"
     }
   },
+  "tags": [],
   "targets": {
     "nx-release-publish": {
       "options": {

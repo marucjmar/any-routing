@@ -61,9 +61,10 @@ map.on('load', () => {
 ## Supported data providers
 
 - [x] [Here API](https://www.here.com/)
-- [ ] [MapBox API](https://docs.mapbox.com/help/glossary/directions-api/)
-- [ ] [Google API](https://developers.google.com/maps/documentation/directions/overview)
-- [ ] [OpenStreetMap API](https://wiki.openstreetmap.org/wiki/Routing)
+- [x] [MapBox API](https://docs.mapbox.com/help/glossary/directions-api/)
+- [x] [ORS API](https://openrouteservice.org/)
+- [x] [OSRM API](https://github.com/Project-OSRM/osrm-backend)
+- [x] [Valhalla API](https://valhalla.github.io/valhalla/api/)
 
 ## Supported Map engine
 

@@ -387,9 +387,6 @@ importers:
       '@any-routing/core':
         specifier: ^0.0.1
         version: 0.0.1(tslib@2.8.1)
-      '@turf/great-circle':
-        specifier: ^7.4.0
-        version: 7.4.0
       '@turf/helpers':
         specifier: 7.4.0
         version: 7.4.0

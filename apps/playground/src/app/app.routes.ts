@@ -4,5 +4,6 @@ import { LeafletComponent } from '../pages/leaflet/leaflet.component';
 
 export const appRoutes: Route[] = [
     { path: 'maplibre', component: HereComponent },
-    { path: 'leaflet', component: LeafletComponent }
+    { path: 'leaflet', component: LeafletComponent },
+    { path: '**', redirectTo: '/maplibre' }
 ];

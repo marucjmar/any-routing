@@ -1,6 +1,7 @@
 {
-  "name": "any-routing-next",
+  "name": "any-routing",
   "$schema": "node_modules/nx/schemas/project-schema.json",
+  "includedScripts": [],
   "targets": {
     "local-registry": {
       "executor": "@nx/js:verdaccio",

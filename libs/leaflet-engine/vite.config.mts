@@ -24,7 +24,7 @@ export default defineConfig(() => ({
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
   build: {
-    outDir: '../../../../dist/libs/line-loader/libs/leaflet-engine',
+    outDir: '../../dist/libs/line-loader/libs/leaflet-engine',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
