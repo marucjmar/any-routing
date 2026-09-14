@@ -38,6 +38,7 @@ testem.log
 .DS_Store
 Thumbs.db
 
+.nx
 .angular
 node_modules
 .nx/cache
