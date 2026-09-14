@@ -1,6 +1,6 @@
 {
   "name": "@any-routing/maplibre-engine",
-  "version": "0.0.1",
+  "version": "1.0.0-rc.1",
   "private": true,
   "type": "module",
   "main": "./index.js",

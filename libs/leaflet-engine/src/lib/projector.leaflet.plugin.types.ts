@@ -43,6 +43,7 @@ export interface LeafletProjectorEventMap {
   routesProjected: RoutesProjectedEvent;
   waypointsProjected: WaypointsProjectedEvent;
   routeClick: RouteClickEvent;
+  routeHighlight: AnyRoutingProjectorEventMap['routeHighlight'];
   viewStateChanged: AnyRoutingProjectorEventMap['viewStateChanged'];
 }
 
