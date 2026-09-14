@@ -180,6 +180,7 @@ export class MapLibreProjector implements AnyRoutingProjector {
       data: featureCollection([]),
       type: 'geojson',
       tolerance: this.options.sourceTolerance,
+      lineMetrics: !!this.options.sourceLineMetrics,
     });
 
     this.setLayers(this.options.routeLayersFactory || []);
