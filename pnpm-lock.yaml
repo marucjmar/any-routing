@@ -113,6 +113,9 @@ importers:
       '@any-routing/core':
         specifier: workspace:*
         version: link:../../libs/core
+      '@any-routing/google-data-provider':
+        specifier: workspace:*
+        version: link:../../libs/google-data-provider
       '@any-routing/leaflet-engine':
         specifier: workspace:*
         version: link:../../libs/leaflet-engine

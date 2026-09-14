@@ -60,6 +60,7 @@
     "@any-routing/mapbox-data-provider": "workspace:*",
     "@any-routing/maplibre-engine": "workspace:*",
     "@any-routing/ors-data-provider": "workspace:*",
+    "@any-routing/google-data-provider": "workspace:*",
     "@maplibre/ngx-maplibre-gl": "^22.1.0",
     "@primeuix/themes": "^3.0.0",
     "@tailwindcss/postcss": "^4.3.3",

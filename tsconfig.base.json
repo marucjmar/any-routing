@@ -31,7 +31,8 @@
       "@any-routing/osrm-data-provider": ["./libs/osrm-data-provider/src/index.ts"],
       "@any-routing/ors-data-provider": ["./libs/ors-data-provider/src/index.ts"],
       "@any-routing/valhalla-data-provider": ["./libs/valhalla-data-provider/src/index.ts"],
-      "@any-routing/mapbox-data-provider": ["./libs/mapbox-data-provider/src/index.ts"]
+      "@any-routing/mapbox-data-provider": ["./libs/mapbox-data-provider/src/index.ts"],
+      "@any-routing/google-data-provider": ["./libs/google-data-provider/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
