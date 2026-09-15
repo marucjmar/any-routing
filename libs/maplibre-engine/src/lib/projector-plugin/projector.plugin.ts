@@ -220,6 +220,15 @@ export class MapLibreProjector implements AnyRoutingProjector {
     this._waypointsMarkers = [];
     this.addWaypointMarker.remove();
     this.waypointMarkerAdded = false;
+
+    const previewDataProvider = this.options.previewDataProvider;
+    if (
+      previewDataProvider &&
+      previewDataProvider !== this.routing?.options.dataProvider
+    ) {
+      previewDataProvider.abortAllRequests();
+      previewDataProvider.destroy();
+    }
   }
 
   // ---------------------------------------------------------------------
