@@ -1,6 +1,6 @@
 {
   "name": "@any-routing/ors-data-provider",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0",
   "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",

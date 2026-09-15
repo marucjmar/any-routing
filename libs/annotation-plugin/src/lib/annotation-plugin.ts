@@ -293,7 +293,7 @@ export class AnnotationPlugin implements AnyRoutingPlugin {
     }
 
     this.popupElementsByRouteId.forEach((popupElem, routeId) => {
-      popupElem.style.zIndex = routeId === selectedRouteId ? '10' : '';
+      popupElem.style.zIndex = routeId === selectedRouteId ? '150' : '101';
     });
 
     if (selectedPopup && popupContainer && popupContainer.lastElementChild !== selectedPopup) {

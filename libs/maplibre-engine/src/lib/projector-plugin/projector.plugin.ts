@@ -477,6 +477,11 @@ export class MapLibreProjector implements AnyRoutingProjector {
   }
 
   private onMapMouseMove(event: MapMouseEvent): void {
+    if (event.originalEvent.target !== this.map.getCanvas()) {
+      this.onRouteHoverOut();
+      return;
+    }
+
     const features = this.map.queryRenderedFeatures(event.point, {
       layers: this.routesLayerIds,
     });
