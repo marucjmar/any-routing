@@ -131,14 +131,21 @@ export class LineAnimation {
       return;
     }
 
-    const svg = document.querySelector<SVGSVGElement>('#svg-overlay');
+    const container = this.map?.getContainer();
+    if (!container) return;
 
+    let svg = container.querySelector<SVGSVGElement>('#svg-overlay');
     if (!svg) {
-      console.warn(
-        `[LineAnimation:${this.id}] #svg-overlay not found`,
-      );
-
-      return;
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.id = 'svg-overlay';
+      svg.setAttribute('aria-hidden', 'true');
+      svg.style.position = 'absolute';
+      svg.style.inset = '0';
+      svg.style.width = '100%';
+      svg.style.height = '100%';
+      svg.style.pointerEvents = 'none';
+      svg.style.zIndex = '1000';
+      container.appendChild(svg);
     }
 
     const path = document.createElementNS(

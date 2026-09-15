@@ -2,7 +2,7 @@ import bbox from '@turf/bbox';
 import { featureCollection, lineString } from '@turf/helpers';
 import type { BBox, Feature, LineString } from 'geojson';
 
-import { type Mode, Requester, type WaypointPosition } from '@any-routing/core';
+import { Requester, type WaypointPosition } from '@any-routing/core';
 
 import type {
   Options,
@@ -13,7 +13,7 @@ import type {
   OsrmRoutingData,
 } from './osrm-provider.types';
 
-export type ExecutorRequestOptions = { url: string; mode: Mode } & Options;
+export type ExecutorRequestOptions = { url: string } & Options;
 
 /** Properties attached to each rendered segment of a route's shape. */
 type ShapeFeatureProperties = {
@@ -63,7 +63,6 @@ export class OsrmExecutor {
       routesShapeGeojson,
       version: performance.now(),
       latest: !this.requester.hasPendingRequests,
-      mode: opts.mode,
       requestOptions: opts,
     };
   }

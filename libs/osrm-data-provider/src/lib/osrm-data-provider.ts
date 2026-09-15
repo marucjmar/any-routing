@@ -86,7 +86,7 @@ export class OsrmProvider implements AnyRoutingDataProvider {
     const coordinates = waypoints.map((w) => this.formatWp(w.position)).join(';');
 
     const queryParamsObj: Record<string, string | number | boolean | undefined | null> = {
-      alternatives: opts.mode === 'default' ? opts.alternatives ?? 0 : 0,
+      alternatives: opts.alternatives ?? 0,
       steps: opts.steps,
       geometries: opts.geometries || 'geojson',
       overview: opts.overview || 'full',

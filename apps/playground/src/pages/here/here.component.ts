@@ -1,18 +1,25 @@
 import { Component, AfterViewInit, ElementRef, ViewChild, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Map } from 'maplibre-gl';
-import { AnyRouting } from '@any-routing/core';
+import { AnyRouting, AnyRoutingDataResponse, Waypoint } from '@any-routing/core';
 import { defaultMapLibreProjectorOptions, MapLibreProjector } from '@any-routing/maplibre-engine';
 import { AnnotationPlugin } from '@any-routing/annotation-plugin';
+import { LeafletAnnotationPlugin } from '@any-routing/annotation-plugin/leaflet';
 import { LineLoaderPlugin } from '@any-routing/line-loader';
+import { LeafletLineLoaderPlugin } from '@any-routing/line-loader/leaflet';
+import * as L from 'leaflet';
+import { LeafletProjector } from '../../../../../libs/leaflet-engine/src/lib/projector.leaflet.plugin';
+import { defaultLeafletProjectorOptions } from '../../../../../libs/leaflet-engine/src/lib/projector.leaflet-defaults.plugin';
 import { ValhallaRoutingData, ValhallaProvider } from '@any-routing/valhalla-data-provider';
+import { OsrmProvider } from '@any-routing/osrm-data-provider';
+import { GoogleProvider } from '@any-routing/google-data-provider';
 import { OrsRoutingData, OrsProvider } from '@any-routing/ors-data-provider';
 import { MapboxRoutingData, MapboxProvider } from '@any-routing/mapbox-data-provider';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { ColorPicker } from 'primeng/colorpicker';
 import { SelectButton } from 'primeng/selectbutton';
 import { environment } from '../../environments/environment.prod';
-import { HereProvider } from '../../../../../libs/here-data-provider/src/lib/here-data-provider';
+import { HereProvider } from '@any-routing/here-data-provider';
 
 @Component({
   selector: 'app-here-page',
@@ -95,6 +102,32 @@ import { HereProvider } from '../../../../../libs/here-data-provider/src/lib/her
             optionDisabled="disabled"
             [(ngModel)]="waypointsSyncStrategy"
             (onChange)="onWaypointsSyncStrategyChange()"
+          />
+        </label>
+      </div>
+
+      <div class="group">
+        <span class="group-title">Provider / map engine</span>
+
+        <label class="control control--column">
+          <span>Routing provider</span>
+          <p-selectbutton
+            [options]="providerOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="provider"
+            (onChange)="onProviderChange()"
+          />
+        </label>
+
+        <label class="control control--column">
+          <span>Map engine</span>
+          <p-selectbutton
+            [options]="mapEngineOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="mapEngine"
+            (onChange)="onMapEngineChange()"
           />
         </label>
       </div>
@@ -248,7 +281,7 @@ stroke: #ff0000;
       position: absolute;
       top: 12px;
       right: 12px;
-      z-index: 10;
+      z-index: 1000000;
       width: 40px;
       height: 40px;
       border: none;
@@ -288,7 +321,7 @@ stroke: #ff0000;
       position: absolute;
       top: 60px;
       right: 12px;
-      z-index: 10;
+      z-index: 1000000;
       width: min(520px, 40vw);
       max-height: min(70vh, 640px);
       display: flex;
@@ -368,6 +401,21 @@ export class HereComponent implements AfterViewInit {
     { label: 'Geocode first', value: 'geocodeFirst' as const, disabled: true },
   ];
 
+  protected readonly providerOptions = [
+    { label: 'HERE', value: 'here' as const },
+    { label: 'OSRM', value: 'osrm' as const },
+    { label: 'Valhalla', value: 'valhalla' as const },
+    { label: 'Google', value: 'google' as const },
+    // { label: 'OpenRouteService', value: 'ors' as const },
+    // { label: 'Mapbox', value: 'mapbox' as const },
+  ];
+  protected readonly mapEngineOptions = [
+    { label: 'MapLibre', value: 'maplibre' as const },
+    { label: 'Leaflet', value: 'leaflet' as const },
+  ];
+  protected provider: 'here' | 'osrm' | 'valhalla' | 'google' | 'ors' | 'mapbox' = 'here';
+  protected mapEngine: 'maplibre' | 'leaflet' = 'maplibre';
+
   protected readonly codePanelOpen = signal(false);
   protected readonly copied = signal(false);
 
@@ -382,39 +430,49 @@ export class HereComponent implements AfterViewInit {
     const canDragWaypoints = this.canDragWaypoints();
     const maxWaypoints = this.maxWaypoints();
     const waypointsSyncStrategy = this.waypointsSyncStrategy();
+    const provider = this.provider;
+    const mapEngine = this.mapEngine;
 
-    const imports = [
-      "import { Map } from 'maplibre-gl';",
-      "import { OrsProvider } from '@any-routing/ors-data-provider';",
-      "import { AnyRouting } from '@any-routing/core';",
-      "import { MapLibreProjector, defaultMapLibreProjectorOptions } from '@any-routing/maplibre-engine';",
-    ];
+    const imports = ["import { AnyRouting } from '@any-routing/core';"];
+    const providerImports: Record<typeof provider, string> = {
+      here: "import { HereProvider } from '@any-routing/here-data-provider';",
+      osrm: "import { OsrmProvider } from '@any-routing/osrm-data-provider';",
+      valhalla: "import { ValhallaProvider } from '@any-routing/valhalla-data-provider';",
+      google: "import { GoogleProvider } from '@any-routing/google-data-provider';",
+      ors: "import { OrsProvider } from '@any-routing/ors-data-provider';",
+      mapbox: "import { MapboxProvider } from '@any-routing/mapbox-data-provider';",
+    };
+    imports.push(providerImports[provider]);
 
     if (annotationEnabled) {
-      imports.push("import { AnnotationPlugin } from '@any-routing/annotation-plugin';");
+      imports.push(
+        mapEngine === 'maplibre'
+          ? "import { AnnotationPlugin } from '@any-routing/annotation-plugin';"
+          : "import { LeafletAnnotationPlugin } from '@any-routing/annotation-plugin/leaflet';",
+      );
     }
     if (lineLoaderEnabled) {
-      imports.push("import { LineLoaderPlugin } from '@any-routing/line-loader';");
+      imports.push(
+        mapEngine === 'maplibre'
+          ? "import { LineLoaderPlugin } from '@any-routing/line-loader';"
+          : "import { LeafletLineLoaderPlugin } from '@any-routing/line-loader/leaflet';",
+      );
     }
 
-    const projectorOptionLines = [
-      '  ...defaultMapLibreProjectorOptions,',
-      '  map,',
-      `  hoverEnabled: ${hoverEnabled},`,
-      `  canSelectRoute: ${canSelectRoute},`,
-      `  canAddWaypoints: ${canAddWaypoints},`,
-      `  canDragWaypoints: ${canDragWaypoints},`,
-      `  maxWaypoints: ${maxWaypoints},`,
-    ];
+    imports.push(
+      mapEngine === 'maplibre'
+        ? "import { Map } from 'maplibre-gl';\nimport { MapLibreProjector, defaultMapLibreProjectorOptions } from '@any-routing/maplibre-engine';"
+        : "import * as L from 'leaflet';\nimport { LeafletProjector, defaultLeafletProjectorOptions } from '@any-routing/leaflet-engine';",
+    );
 
     const pluginLines: string[] = [];
     const pluginSetupLines: string[] = [];
 
-    if (lineLoaderEnabled) {
+    if (lineLoaderEnabled && mapEngine === 'maplibre') {
       pluginSetupLines.push(
         'const lineLoaderPlugin = new LineLoaderPlugin({',
         '  map,',
-          '  projector,',
+        '  projector,',
         '  animation: {',
         `    headColor: '${this.hexToRgba(lineLoaderColor, 1)}',`,
         `    tailColor: '${this.hexToRgba(lineLoaderColor, 0)}',`,
@@ -422,42 +480,105 @@ export class HereComponent implements AfterViewInit {
         '});',
       );
       pluginLines.push('lineLoaderPlugin');
+    } else if (lineLoaderEnabled) {
+      pluginSetupLines.push(
+        'const lineLoaderPlugin = new LeafletLineLoaderPlugin({',
+        '  map,',
+        '  projector,',
+        '});',
+      );
+      pluginLines.push('lineLoaderPlugin');
     }
 
     if (annotationEnabled) {
-      pluginSetupLines.push(
-        'const annotationPlugin = new AnnotationPlugin({',
-        '  projector,',
-        '  map,',
-        `  calculatePopupOnFly: ${calculatePopupOnFly},`,
-        '});',
-      );
+      if (mapEngine === 'maplibre') {
+        pluginSetupLines.push(
+          'const annotationPlugin = new AnnotationPlugin({',
+          '  map,',
+          `  calculatePopupOnFly: ${calculatePopupOnFly},`,
+          '});',
+        );
+      } else {
+        pluginSetupLines.push(
+          'const annotationPlugin = new LeafletAnnotationPlugin({ map });',
+        );
+      }
       pluginLines.push('annotationPlugin');
     }
+
+    const mapLines =
+      mapEngine === 'maplibre'
+        ? [
+            "const map = new Map({",
+            "  container: mapContainer,",
+            "  center: [13, 51],",
+            '  zoom: 4,',
+            "  style: 'https://tiles.openfreemap.org/styles/liberty',",
+            '});',
+            '',
+            'const projector = new MapLibreProjector({',
+            '  ...defaultMapLibreProjectorOptions,',
+            '  map,',
+            `  hoverEnabled: ${hoverEnabled},`,
+            `  canSelectRoute: ${canSelectRoute},`,
+            `  canAddWaypoints: ${canAddWaypoints},`,
+            `  canDragWaypoints: ${canDragWaypoints},`,
+            `  maxWaypoints: ${maxWaypoints},`,
+            '});',
+          ]
+        : [
+            "const map = new L.Map(mapContainer).setView([51, 13], 4);",
+            "L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {",
+            "  attribution: '&copy; OpenStreetMap contributors',",
+            '}).addTo(map);',
+            '',
+            'const projector = new LeafletProjector({',
+            '  ...defaultLeafletProjectorOptions,',
+            '  map,',
+            `  canSelectRoute: ${canSelectRoute},`,
+            `  canAddWaypoints: ${canAddWaypoints},`,
+            `  canDragWaypoints: ${canDragWaypoints},`,
+            `  maxWaypoints: ${maxWaypoints},`,
+            '});',
+          ];
+
+    const providerOptions =
+      provider === 'here'
+        ? "  apiKey: 'YOUR_HERE_API_KEY',"
+        : provider === 'google'
+          ? "  apiKey: 'YOUR_GOOGLE_API_KEY',"
+          : provider === 'ors'
+            ? "  apiKey: 'YOUR_ORS_API_KEY',"
+            : provider === 'mapbox'
+              ? "  accessToken: 'YOUR_MAPBOX_ACCESS_TOKEN',"
+              : '';
+    const providerClass = {
+      here: 'Here',
+      osrm: 'Osrm',
+      valhalla: 'Valhalla',
+      google: 'Google',
+      ors: 'Ors',
+      mapbox: 'Mapbox',
+    }[provider];
 
     const lines = [
       ...imports,
       '',
-      "const map = new Map({",
-      "  container: mapContainer,",
-      "  center: [13, 51],",
-      '  zoom: 4,',
-      "  style: 'https://tiles.openfreemap.org/styles/liberty',",
-      '});',
+      "const mapContainer = document.getElementById('map');",
+      "if (!mapContainer) throw new Error('Map container not found');",
       '',
-      'const projector = new MapLibreProjector({',
-      ...projectorOptionLines,
-      '});',
+      ...mapLines,
       '',
-      'const dataProvider = new OsrmProvider({',
-      '   alternatives: 2,',
+      `const dataProvider = new ${providerClass}Provider({`,
+      ...(providerOptions ? [providerOptions] : []),
+      provider === 'mapbox' ? '  alternatives: true,' : '  alternatives: 2,',
       '});',
       ...pluginSetupLines,
       pluginSetupLines.length ? '' : undefined,
       'const routing = new AnyRouting({',
       '  dataProvider,',
       `  projector,`,
-      `  plugins: [${pluginLines.join(', ')}],`,
+      ...(pluginLines.length ? [`  plugins: [${pluginLines.join(', ')}],`] : []),
       `  waypointsSyncStrategy: '${waypointsSyncStrategy}',`,
       '});',
       '',
@@ -466,110 +587,237 @@ export class HereComponent implements AfterViewInit {
       '  console.log(event);',
       '});',
       '',
-      "map.on('load', () => {",
+      ...(mapEngine === 'maplibre' ? ["map.on('load', () => {"] : ['{']),
       '  routing.initialize();',
       '  routing.setWaypoints([',
-      "    { position: { lng: -3.385644, lat: 40.484768 }, properties: { label: 'A' } },",
-      "    { position: { lng: 23.064007, lat: 52.749891 }, properties: { label: 'B' } },",
+      "    { position: { lng: 13.405, lat: 52.52 }, properties: { label: 'A' } },",
+      "    { position: { lng: 21.012, lat: 52.229 }, properties: { label: 'B' } },",
       '  ]);',
-      '  routing.recalculateRoute(),then(() => projector.fitViewToData());',
+      '  routing.recalculateRoute().then(() => projector.fitViewToData());',
       '});',
     ].filter((line): line is string => line !== undefined);
 
     return lines.join('\n');
   });
 
-  private routing?: AnyRouting<MapboxRoutingData>;
+  private routing?: AnyRouting<any, any>;
   private map?: Map;
-  private projector?: MapLibreProjector;
-  private annotationPlugin?: AnnotationPlugin;
-  private lineLoaderPlugin?: LineLoaderPlugin;
+  private leafletMap?: L.Map;
+  private projector?: MapLibreProjector | LeafletProjector;
+  private annotationPlugin?: AnnotationPlugin | LeafletAnnotationPlugin;
+  private lineLoaderPlugin?: LineLoaderPlugin | LeafletLineLoaderPlugin;
 
   ngAfterViewInit() {
-    const map = new Map({
-      container: this.mapContainer!.nativeElement,
-      center: [13, 51],
-      zoom: 4,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
-    });
-    this.map = map;
+    this.initializeRouting();
+  }
 
-    const dataProvider = new HereProvider({
-      apiKey: environment.hereApiKey,
-      alternatives: 2,
-      // shapePolylinePrecision: 0.0001,
-    });
+  protected onProviderChange(): void {
+    this.rebuildRouting(true, true);
+  }
 
-    const previewDataProvider = new HereProvider({
-      apiKey: environment.hereApiKey,
-      alternatives: 0,
-      // shapePolylinePrecision: 0.0001,
-    });
+  protected onMapEngineChange(): void {
+    this.rebuildRouting(true, false);
+  }
 
-    const projector = new MapLibreProjector({
-      ...defaultMapLibreProjectorOptions,
-      map,
-      hoverEnabled: this.hoverEnabled(),
-      canSelectRoute: this.canSelectRoute(),
-      canAddWaypoints: this.canAddWaypoints(),
-      canDragWaypoints: this.canDragWaypoints(),
-      maxWaypoints: this.maxWaypoints(),
-      routesWhileDragging: true,
-      previewDataProvider: previewDataProvider,
-    });
+  private initializeRouting(
+    preservedWaypoints?: Waypoint[],
+    preservedData?: AnyRoutingDataResponse,
+    recalculate = true,
+  ): void {
+    const provider = this.createProvider();
+    let projector: MapLibreProjector | LeafletProjector;
+
+    if (this.mapEngine === 'maplibre') {
+      const map = new Map({
+        container: this.mapContainer!.nativeElement,
+        center: [13, 51],
+        zoom: 4,
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+      });
+      this.map = map;
+      projector = new MapLibreProjector({
+        ...defaultMapLibreProjectorOptions,
+        map,
+        hoverEnabled: this.hoverEnabled(),
+        canSelectRoute: this.canSelectRoute(),
+        canAddWaypoints: this.canAddWaypoints(),
+        canDragWaypoints: this.canDragWaypoints(),
+        maxWaypoints: this.maxWaypoints(),
+        routesWhileDragging: true,
+        previewDataProvider: this.createProvider(0),
+      });
+    } else {
+      const map = new L.Map(this.mapContainer!.nativeElement, { preferCanvas: true }).setView(
+        [51, 13],
+        4,
+      );
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map);
+      this.leafletMap = map;
+      projector = new LeafletProjector({
+        ...defaultLeafletProjectorOptions,
+        map,
+        canSelectRoute: this.canSelectRoute(),
+        canAddWaypoints: this.canAddWaypoints(),
+        canDragWaypoints: this.canDragWaypoints(),
+        maxWaypoints: this.maxWaypoints(),
+      });
+    }
+
+    const mapLibreReady = this.mapEngine !== 'maplibre' || this.map?.isStyleLoaded();
+    if (!mapLibreReady && this.map) {
+      const pendingMap = this.map;
+      pendingMap.once('load', () => {
+        if (this.map !== pendingMap) {
+          return;
+        }
+        this.configureRouting(provider, projector, preservedWaypoints, preservedData, recalculate);
+      });
+      return;
+    }
+
+    this.configureRouting(provider, projector, preservedWaypoints, preservedData, recalculate);
+  }
+
+  private configureRouting(
+    provider: any,
+    projector: MapLibreProjector | LeafletProjector,
+    preservedWaypoints?: Waypoint[],
+    preservedData?: AnyRoutingDataResponse,
+    recalculate = true,
+  ): void {
     this.projector = projector;
-
-    const routing = new AnyRouting<MapboxRoutingData, MapLibreProjector>({
-      dataProvider,
+    const routing = new AnyRouting({
+      dataProvider: provider,
       projector,
       waypointsSyncStrategy: this.waypointsSyncStrategy(),
-      // geocoder: async (waypoint) => {
-      //  const geocode = await fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?apiKey=${environment.hereApiKey}&in=circle:${waypoint.position.lat},${waypoint.position.lng};r=50&limit=1&lang=pl&types=address,houseNumber,city,postalCode,area,street&includeUnnamedStreet=true`);
-      //   const data = await geocode.json();
-
-      //  console.log(data)
-      //   return { ...waypoint, mappedPosition: data.items[0].position, position: data.items[0].position };
-      // }
     });
     this.routing = routing;
+    routing.initialize();
 
-    map.on('load', async () => {
-      routing.initialize();
-
-      if (this.annotationEnabled()) {
+    this.annotationPlugin = undefined;
+    this.lineLoaderPlugin = undefined;
+    if (this.annotationEnabled()) {
+      if (this.mapEngine === 'maplibre' && this.map) {
         this.annotationPlugin = routing.addPlugin(
-          new AnnotationPlugin({ map, calculatePopupOnFly: this.calculatePopupOnFly() }),
+          new AnnotationPlugin({
+            map: this.map,
+            calculatePopupOnFly: this.calculatePopupOnFly(),
+          }),
         ) as AnnotationPlugin;
+      } else if (this.mapEngine === 'leaflet' && this.leafletMap) {
+        this.annotationPlugin = routing.addPlugin(
+          new LeafletAnnotationPlugin({ map: this.leafletMap }),
+        ) as LeafletAnnotationPlugin;
       }
-
-      if (this.lineLoaderEnabled()) {
-        this.lineLoaderPlugin = routing.addPlugin(this.createLineLoaderPlugin(map));
+    }
+    if (this.lineLoaderEnabled()) {
+      if (this.mapEngine === 'maplibre' && this.map) {
+        this.lineLoaderPlugin = routing.addPlugin(this.createLineLoaderPlugin(this.map));
+      } else if (this.mapEngine === 'leaflet' && this.leafletMap) {
+        this.lineLoaderPlugin = routing.addPlugin(this.createLeafletLineLoaderPlugin(this.leafletMap));
       }
+    }
 
-      routing.on('routesFound', (event) => {
-        console.log(event);
-      });
-
+    if (preservedWaypoints?.length) {
+      routing.setWaypoints(preservedWaypoints);
+    } else {
       routing.setWaypoints([
-        { position: { lng: -3.385644, lat: 40.484768 }, properties: { label: 'B' } },
-        { position: { lng: 23.064007, lat: 52.749891 }, properties: { label: 'C' } },
+        { position: { lng: 13.405, lat: 52.52 }, properties: { label: 'B' } },
+        { position: { lng: 21.012, lat: 52.229 }, properties: { label: 'C' } },
       ]);
+    }
 
-      routing.recalculateRoute().then(() => {
-        projector.fitViewToData({ padding: 40 });
-      });
-    });
+    if (preservedData) {
+      routing.applyCalculationResult(preservedData);
+    }
+
+    if (recalculate || !preservedData) {
+      void routing
+        .recalculateRoute()
+        .then(() => {
+          projector.fitViewToData();
+        })
+        .catch((error: unknown) => {
+          console.error(`Route calculation failed for ${this.provider}`, error);
+        });
+    } else {
+      projector.fitViewToData();
+    }
+  }
+
+  private rebuildRouting(preserveRoute: boolean, recalculate: boolean): void {
+    if (!this.routing) {
+      return;
+    }
+
+    const previousWaypoints = this.routing.state.waypoints.map(({ position, properties, geocoded }) => ({
+      position,
+      properties,
+      geocoded,
+    }));
+    const previousData = preserveRoute ? this.routing.data : undefined;
+
+    this.routing.onRemove();
+    this.map?.remove();
+    this.leafletMap?.remove();
+    this.map = undefined;
+    this.leafletMap = undefined;
+    this.projector = undefined;
+    this.routing = undefined;
+    this.initializeRouting(previousWaypoints, previousData, recalculate);
+  }
+
+  private createProvider(alternatives = 2): any {
+    switch (this.provider) {
+      case 'osrm':
+        return new OsrmProvider({ alternatives, worker: true });
+      case 'valhalla':
+        return new ValhallaProvider({ alternatives, worker: true });
+      case 'google':
+        return new GoogleProvider({
+          apiKey: environment.googleApiKey,
+          alternatives,
+          worker: true,
+        });
+      case 'ors':
+        return new OrsProvider({
+          apiKey: environment.orsApiKey,
+          alternatives,
+          worker: true,
+        });
+      case 'mapbox':
+        return new MapboxProvider({
+          accessToken: environment.mapboxAccessToken,
+          alternatives: true,
+          worker: true,
+        });
+      case 'here':
+      default:
+        return new HereProvider({
+          apiKey: environment.hereApiKey,
+          alternatives,
+          worker: true,
+        });
+    }
   }
 
   protected onAnnotationToggle(): void {
-    if (!this.routing || !this.map) {
+    if (!this.routing) {
       return;
     }
 
     if (this.annotationEnabled()) {
-      this.annotationPlugin = this.routing.addPlugin(
-        new AnnotationPlugin({ map: this.map, calculatePopupOnFly: this.calculatePopupOnFly() }),
-      ) as AnnotationPlugin;
+      if (this.mapEngine === 'maplibre' && this.map) {
+        this.annotationPlugin = this.routing.addPlugin(
+          new AnnotationPlugin({ map: this.map, calculatePopupOnFly: this.calculatePopupOnFly() }),
+        ) as AnnotationPlugin;
+      } else if (this.mapEngine === 'leaflet' && this.leafletMap) {
+        this.annotationPlugin = this.routing.addPlugin(
+          new LeafletAnnotationPlugin({ map: this.leafletMap }),
+        ) as LeafletAnnotationPlugin;
+      }
     } else if (this.annotationPlugin) {
       this.routing.removePlugin(this.annotationPlugin);
       this.annotationPlugin = undefined;
@@ -577,12 +825,18 @@ export class HereComponent implements AfterViewInit {
   }
 
   protected onLineLoaderToggle(): void {
-    if (!this.routing || !this.map) {
+    if (!this.routing) {
       return;
     }
 
     if (this.lineLoaderEnabled()) {
-      this.lineLoaderPlugin = this.routing.addPlugin(this.createLineLoaderPlugin(this.map));
+      if (this.mapEngine === 'maplibre' && this.map) {
+        this.lineLoaderPlugin = this.routing.addPlugin(this.createLineLoaderPlugin(this.map));
+      } else if (this.mapEngine === 'leaflet' && this.leafletMap) {
+        this.lineLoaderPlugin = this.routing.addPlugin(
+          this.createLeafletLineLoaderPlugin(this.leafletMap),
+        );
+      }
     } else if (this.lineLoaderPlugin) {
       this.routing.removePlugin(this.lineLoaderPlugin);
       this.lineLoaderPlugin = undefined;
@@ -590,7 +844,7 @@ export class HereComponent implements AfterViewInit {
   }
 
   protected onLineLoaderColorChange(): void {
-    if (!this.routing || !this.map || !this.lineLoaderEnabled()) {
+    if (!this.routing || !this.lineLoaderEnabled()) {
       return;
     }
 
@@ -598,12 +852,30 @@ export class HereComponent implements AfterViewInit {
       this.routing.removePlugin(this.lineLoaderPlugin);
     }
 
-    this.lineLoaderPlugin = this.routing.addPlugin(this.createLineLoaderPlugin(this.map));
+    if (this.mapEngine === 'maplibre' && this.map) {
+      this.lineLoaderPlugin = this.routing.addPlugin(this.createLineLoaderPlugin(this.map));
+    } else if (this.mapEngine === 'leaflet' && this.leafletMap) {
+      this.lineLoaderPlugin = this.routing.addPlugin(
+        this.createLeafletLineLoaderPlugin(this.leafletMap),
+      );
+    }
   }
 
   private createLineLoaderPlugin(map: Map): LineLoaderPlugin {
     const color = this.lineLoaderColor();
     return new LineLoaderPlugin({
+      map,
+      projector: this.projector!,
+      animation: {
+        headColor: this.hexToRgba(color, 1),
+        tailColor: this.hexToRgba(color, 0),
+      },
+    });
+  }
+
+  private createLeafletLineLoaderPlugin(map: L.Map): LeafletLineLoaderPlugin {
+    const color = this.lineLoaderColor();
+    return new LeafletLineLoaderPlugin({
       map,
       projector: this.projector!,
       animation: {
@@ -622,7 +894,9 @@ export class HereComponent implements AfterViewInit {
   }
 
   protected onCalculatePopupOnFlyToggle(): void {
-    this.annotationPlugin?.setCalculatePopupOnFly(this.calculatePopupOnFly());
+    if (this.annotationPlugin instanceof AnnotationPlugin) {
+      this.annotationPlugin.setCalculatePopupOnFly(this.calculatePopupOnFly());
+    }
   }
 
   protected onProjectorOptionsChange(): void {

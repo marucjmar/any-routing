@@ -1,7 +1,7 @@
-@import "tailwindcss";
-@import "primeicons/primeicons.css";
+@use "tailwindcss";
+@use "primeicons/primeicons.css";
 
-// @import "tailwindcss-primeui";
+// @use "tailwindcss-primeui";
 
-@import 'maplibre-gl/dist/maplibre-gl.css';
-@import 'leaflet/dist/leaflet.css';
+@use 'maplibre-gl/dist/maplibre-gl.css';
+@use 'leaflet/dist/leaflet.css';
