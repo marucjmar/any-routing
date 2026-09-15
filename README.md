@@ -1,6 +1,6 @@
 # AnyRouting
 
-A full featured (performance focused), modular and lightweight directions plugin for map engines.
+A full-featured, performance-focused, modular, and lightweight directions plugin that is independent of any map engine and can also run without a map.
 
 ## Demo
 
