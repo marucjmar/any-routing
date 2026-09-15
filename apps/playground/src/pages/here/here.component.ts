@@ -724,8 +724,8 @@ export class HereComponent implements AfterViewInit {
       routing.setWaypoints(preservedWaypoints);
     } else {
       routing.setWaypoints([
-        { position: { lng: 13.405, lat: 52.52 }, properties: { label: 'B' } },
-        { position: { lng: 21.012, lat: 52.229 }, properties: { label: 'C' } },
+        { position: { lng: -3.385644, lat: 40.484768 }, properties: { label: 'B' } },
+        { position: { lng: 23.064007, lat: 52.749891 }, properties: { label: 'C' } },
       ]);
     }
 
