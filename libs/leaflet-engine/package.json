@@ -1,9 +1,12 @@
 {
   "name": "@any-routing/leaflet-engine",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",
+  "publishConfig": {
+    "directory": "../../dist/libs/leaflet-engine"
+  },
   "dependencies": {
     "@turf/bbox": "7.4.0",
     "@turf/helpers": "7.4.0",

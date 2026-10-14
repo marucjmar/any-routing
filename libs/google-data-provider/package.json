@@ -1,9 +1,12 @@
 {
   "name": "@any-routing/google-data-provider",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",
+  "publishConfig": {
+    "directory": "../../dist/libs/google-data-provider"
+  },
   "dependencies": {
     "@any-routing/core": "workspace:*",
     "@turf/bbox": "7.4.0",

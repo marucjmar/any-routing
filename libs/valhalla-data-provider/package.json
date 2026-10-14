@@ -1,9 +1,12 @@
 {
   "name": "@any-routing/valhalla-data-provider",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",
+  "publishConfig": {
+    "directory": "../../dist/libs/valhalla-data-provider"
+  },
   "dependencies": {
     "@any-routing/core": "workspace:*",
     "@turf/bbox": "7.4.0",

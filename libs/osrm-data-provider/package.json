@@ -1,9 +1,12 @@
 {
   "name": "@any-routing/osrm-data-provider",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",
+  "publishConfig": {
+    "directory": "../../dist/libs/osrm-data-provider"
+  },
   "dependencies": {
     "@any-routing/core": "workspace:*",
     "comlink": "4.4.2",
