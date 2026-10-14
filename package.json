@@ -6,6 +6,10 @@
     "apps/*",
     "libs/*"
   ],
+  "scripts": {
+    "build-all": "corepack pnpm nx run-many -t build",
+    "publish-all": "corepack pnpm -r --filter './dist/libs/**' publish --tag latest --access public"
+  },
   "devDependencies": {
     "@nx/angular": "23.2.0",
     "@nx/devkit": "23.2.0",
