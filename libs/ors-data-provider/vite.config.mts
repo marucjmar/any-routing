@@ -27,7 +27,7 @@ export default defineConfig({
       fileName: 'index',
     },
     rollupOptions: {
-      external: [],
+      external: (id) => !id.startsWith('.') && !id.startsWith('/')
     },
   },
   test: {

@@ -41,7 +41,7 @@ export default defineConfig(() => ({
     },
     rolldownOptions: {
       // External packages that should not be bundled into your library.
-      external: [],
+      external: (id) => !id.startsWith('.') && !id.startsWith('/')
     },
   },
   test: {

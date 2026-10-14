@@ -1,12 +1,12 @@
 import { featureCollection } from '@turf/helpers';
 import {
-  FitBoundsOptions,
-  GeoJSONSource,
+  type FitBoundsOptions,
+  type GeoJSONSource,
   LngLatBounds,
-  Map,
-  MapGeoJSONFeature,
-  MapLayerMouseEvent,
-  MapMouseEvent,
+  type Map,
+  type MapGeoJSONFeature,
+  type MapLayerMouseEvent,
+  type MapMouseEvent,
   Marker,
 } from 'maplibre-gl';
 import {

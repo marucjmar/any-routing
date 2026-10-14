@@ -26,6 +26,10 @@ export default defineConfig(() => ({
       fileName: 'index',
       formats: ['es' as const],
     },
+    rolldownOptions: {
+      // External packages that should not be bundled into your library.
+      external: (id) => !id.startsWith('.') && !id.startsWith('/')
+    },
   },
   test: {
     name: 'google-data-provider',

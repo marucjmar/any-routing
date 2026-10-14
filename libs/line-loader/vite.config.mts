@@ -45,7 +45,7 @@ export default defineConfig(() => ({
     },
     rolldownOptions: {
       // External packages that should not be bundled into your library.
-      external: ['@any-routing/core', 'maplibre-gl', 'leaflet'],
+      external: (id) => !id.startsWith('.') && !id.startsWith('/')
     },
   },
   test: {

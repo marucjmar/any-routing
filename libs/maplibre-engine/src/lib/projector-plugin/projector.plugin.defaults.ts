@@ -1,4 +1,4 @@
-import { LayerSpecification, Marker } from 'maplibre-gl';
+import { type LayerSpecification, Marker } from 'maplibre-gl';
 import type {
   LayerFactoryContext,
   LayerRef,

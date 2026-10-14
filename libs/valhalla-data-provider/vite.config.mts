@@ -28,7 +28,9 @@ export default defineConfig(() => ({
       fileName: 'index',
       formats: ['es' as const],
     },
-    rolldownOptions: { external: [] },
+    rolldownOptions: {
+      external: (id) => !id.startsWith('.') && !id.startsWith('/')
+    },
   },
   test: {
     name: 'valhalla-data-provider',
