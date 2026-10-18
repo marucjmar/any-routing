@@ -467,7 +467,7 @@ importers:
         specifier: 7946.0.16
         version: 7946.0.16
       maplibre-gl:
-        specifier: 6.8.0
+        specifier: '>=6.8.0'
         version: 6.8.0
     publishDirectory: ../../dist/libs/maplibre-engine
 
