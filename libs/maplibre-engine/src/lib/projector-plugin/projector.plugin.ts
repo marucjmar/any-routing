@@ -87,7 +87,7 @@ export class MapLibreProjector implements AnyRoutingProjector {
   private _maxWaypoints = Infinity;
   private _sourceId: string;
   private _routesLayerIds: string[] = [];
-  private layers: LayerRef[] = [];
+  private  _layers: LayerRef[] = [];
   private lastHoverFeatureId?: number;
   private waypointMarkerAdded = false;
   private activeDragCleanup?: () => void;
@@ -99,6 +99,10 @@ export class MapLibreProjector implements AnyRoutingProjector {
   private previewLoading = false;
   private lastPreviewData?: { waypoints: InternalWaypoint[]; data: AnyRoutingDataResponse };
   private _waypoints: InternalWaypoint[] = [];
+
+  public get layers(): LayerRef[] {
+    return this._layers;
+  }
 
   private readonly stateUpdatedHandler = (
     event: RoutingEvents<AnyRoutingDataResponse>['stateUpdated'],
@@ -319,7 +323,7 @@ export class MapLibreProjector implements AnyRoutingProjector {
 
   public setLayers(layersFactories: LayerFactory[]): void {
     this.destroyLayers();
-    this.layers = layersFactories.map((layerFactory) =>
+    this._layers = layersFactories.map((layerFactory) =>
       layerFactory({ routing: this.routing, sourceId: this._sourceId }),
     );
     this._routesLayerIds = this.layers.map(({ specification: { id } }) => id);
@@ -833,7 +837,7 @@ export class MapLibreProjector implements AnyRoutingProjector {
         this.map.removeLayer(layer.specification.id);
       }
     });
-    this.layers = [];
+    this._layers = [];
     this._routesLayerIds = [];
   }
 
