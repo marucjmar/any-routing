@@ -104,6 +104,10 @@ export class MapLibreProjector implements AnyRoutingProjector {
     return this._layers;
   }
 
+  public get sourceId(): string {
+    return this._sourceId;
+  }
+
   private readonly stateUpdatedHandler = (
     event: RoutingEvents<AnyRoutingDataResponse>['stateUpdated'],
   ) => {
